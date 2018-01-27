@@ -9,6 +9,10 @@ for day, idx in calendar_data
   calendar_map[day.week]["#{day.day}"] = idx
 
 
+# yes, JS is fuckin' brain dead
+mod = (number, modulus) -> ((number % modulus) + modulus) % modulus
+
+
 class UrwDate
   constructor: (@day_idx) ->
 
@@ -16,13 +20,7 @@ class UrwDate
     calendar_data[@day_idx]
 
   move: (n) ->
-    @day_idx = (@day_idx + n) % calendar_data.length
-
-  next: ->
-    this.move(1)
-
-  prev: ->
-    this.move(-1)
+    @day_idx = mod @day_idx + n, calendar_data.length
 
   to_s: ->
     day = this.day()
