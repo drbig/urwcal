@@ -16,6 +16,10 @@ module.exports = {
   module: {
     loaders: [
       {
+        test: /\.hbs$/,
+        use: ['handlebars-loader']
+      },
+      {
         test: /\.coffee$/,
         use: [
           {
@@ -29,8 +33,8 @@ module.exports = {
         ]
       },
       {
-        test: /\.hbs$/,
-        use: ['handlebars-loader']
+        test: /\.less$/,
+        use: ['style-loader', 'css-loader', 'less-loader']
       }
     ]
   },
