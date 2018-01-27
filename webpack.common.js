@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   entry: {
-    app: './src/index.jsx'
+    app: './src/index.coffee'
   },
   plugins: [
     new CleanWebpackPlugin(['dist']),
@@ -16,12 +16,21 @@ module.exports = {
   module: {
     loaders: [
       {
-        test: /\.jsx?/,
-        loader: 'babel-loader'
+        test: /\.coffee$/,
+        use: [
+          {
+            loader: 'coffee-loader',
+            options: {
+              transpile: {
+                presets: ['env', 'react']
+              }
+            }
+          }
+        ]
       },
       {
         test: /\.hbs$/,
-        loader: 'handlebars-loader',
+        use: ['handlebars-loader']
       }
     ]
   },
