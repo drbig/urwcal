@@ -11,11 +11,6 @@
     "type": "git",
     "url": "git+https://github.com/drbig/urwcal.git"
   },
-  "keywords": [
-    "UrW",
-    "Game",
-    "Calendar"
-  ],
   "author": "Piotr S. Staszewski",
   "license": "MIT",
   "bugs": {
