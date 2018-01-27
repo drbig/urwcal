@@ -35,24 +35,61 @@ require './index.less'
 import React from 'react'
 import {render} from 'react-dom'
 
+make_td = (c) -> <td>{c}</td>
+make_tr = (c...) -> <tr>{c}</tr>
+
+format_days = (days) ->
+  for day in days
+    console.log day
+    make_td(day.day)
+
+class MonthView extends React.Component
+  render: ->
+    month_num = this.props.urw_date.day().month_num
+    console.log month_num
+    days_lst = (day for day in calendar_data when day.month_num == month_num)
+    month_map = {}
+    for day in days_lst
+      month_map[day.week] ||= []
+      month_map[day.week].push(day)
+
+    console.log month_map
+    init_day = {week: days_lst[0].week, day: days_lst[0].day}
+    console.log init_day
+
+    <table>
+      <thead>
+        <tr>
+          <th>Week</th>
+          <th colSpan='7'>{this.props.urw_date.day().month}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {make_tr(day.week, format_days(days)) for week, days of month_map}
+      </tbody>
+    </table>
+
 
 class App extends React.Component
   constructor: (props) ->
     super props
     @urw_date = new UrwDate(0)
-    this.state = {
-      date: @urw_date.to_s()
-    }
+    this.state = {urw_date: @urw_date}
 
   handleMove: (n) ->
     @urw_date.move(n)
-    this.setState({date: @urw_date.to_s()})
+    this.setState({urw_date: @urw_date})
 
   render: ->
     <div>
-      <button onClick={=> this.handleMove(-1)}>Prev</button>
-      <span>{this.state.date}</span>
-      <button onClick={=> this.handleMove(1)}>Next</button>
+      <div>
+        <button onClick={=> this.handleMove(-1)}>Prev</button>
+        <span>{this.state.urw_date.to_s()}</span>
+        <button onClick={=> this.handleMove(1)}>Next</button>
+      </div>
+      <div>
+        <MonthView urw_date={this.state.urw_date} />
+      </div>
     </div>
 
 
