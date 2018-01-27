@@ -1,0 +1,42 @@
+{
+  "name": "urwcal",
+  "version": "0.0.1",
+  "description": "UrW Calendar App",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack-dev-server --open --config webpack.dev.js",
+    "build": "webpack --config webpack.prod.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drbig/urwcal.git"
+  },
+  "keywords": [
+    "UrW",
+    "Game",
+    "Calendar"
+  ],
+  "author": "Piotr S. Staszewski",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/drbig/urwcal/issues"
+  },
+  "homepage": "https://github.com/drbig/urwcal#readme",
+  "dependencies": {
+    "babel": "^6.23.0",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "clean-webpack-plugin": "^0.1.18",
+    "handlebars": "^4.0.11",
+    "handlebars-loader": "^1.6.0",
+    "html-webpack-plugin": "^2.30.1",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "webpack": "^3.10.0",
+    "webpack-dev-server": "^2.11.1",
+    "webpack-merge": "^4.1.1"
+  }
+}
