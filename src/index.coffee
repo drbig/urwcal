@@ -50,9 +50,9 @@ class App extends React.Component
 
   render: ->
     <div>
-      <span className="button" onClick={=> this.handleMove(-1)}>Prev</span>
+      <button onClick={=> this.handleMove(-1)}>Prev</button>
       <span>{this.state.date}</span>
-      <span className="button" onClick={=> this.handleMove(1)}>Next</span>
+      <button onClick={=> this.handleMove(1)}>Next</button>
     </div>
 
 
