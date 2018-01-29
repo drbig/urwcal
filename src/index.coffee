@@ -47,10 +47,11 @@ format_days = (days) ->
 
 class MonthWeekTd extends React.Component
   render: ->
-    class_name = (
+    class_name = 'mw_td_base mw_td_day'
+    class_name += (
       if this.props.day.idx == this.props.today.idx
-      then 'mw_td_today'
-      else 'mw_td_day'
+      then ' mw_td_this_day'
+      else ''
     )
 
     <td className={class_name}>{this.props.day.day}</td>
@@ -63,10 +64,11 @@ class MonthWeekTr extends React.Component
     <MonthWeekTd key={key} today={this.props.today} day={day} />
 
   render: ->
-    class_name = (
+    class_name = 'mw_td_base mw_td_month'
+    class_name += (
       if this.props.week == this.props.today.week
-      then 'mw_td_this_month'
-      else 'mw_td_month'
+      then ' mw_td_this_month'
+      else ''
     )
 
     <tr>
