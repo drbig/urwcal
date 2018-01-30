@@ -73,13 +73,13 @@ class MonthWeekTr extends React.Component
     <tr>
       <td className={class_name}>{this.props.week}</td>
       {
-        make_td('', 'mw_td_base', "etd-#{this.props.week}-#{n}") \
+        make_td('', 'mw_td_base mw_td_empty', "etd-#{this.props.week}-#{n}") \
         for n in [1..fill_left_num] \
         when fill_left_num
       }
       {this.renderMonthWeekTd(day) for day in this.props.days}
       {
-        make_td('', 'mw_td_base', "etd-#{this.props.week}-#{n}") \
+        make_td('', 'mw_td_base mw_td_empty', "etd-#{this.props.week}-#{n}") \
         for n in [1..fill_right_num] \
         when fill_right_num
       }
