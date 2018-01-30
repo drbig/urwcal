@@ -36,6 +36,9 @@ import React from 'react'
 import {render} from 'react-dom'
 
 
+make_option = (l, key=null) ->
+  <option value='{l}' key={key}>{l}</option>
+
 make_td = (c, class_name=null, key=null) ->
   <td className={class_name} key={key}>{c}</td>
 
@@ -120,10 +123,10 @@ class MonthTable extends React.Component
     </table>
 
 
-class App extends React.Component
+class UrwMainApp extends React.Component
   constructor: (props) ->
     super props
-    @urw_date = new UrwDate(0)
+    @urw_date = new UrwDate(this.props.day_idx)
     this.state = {urw_date: @urw_date}
 
   handleMove: (n) ->
@@ -140,6 +143,79 @@ class App extends React.Component
       <div>
         <MonthTable urw_date={this.state.urw_date} />
       </div>
+    </div>
+
+
+class UrwDateSelector extends React.Component
+  constructor: (props) ->
+    super props
+    this.state = {
+      week: null,
+      day: null,
+    }
+
+  handleWeekChoice: (e) ->
+    week = e.target.value
+    console.log "Week choice? #{week}"
+
+    if week == ''
+      return
+
+    this.setState({week: week})
+
+  handleDayChoice: (e) ->
+    day = e.target.value
+    console.log "Day selected? #{day}"
+
+  renderDaySelect: ->
+    console.log "Day Select run!"
+
+    <select onChange={(e) => this.handleDayChoice(e)}>
+      <option value=''>Select day...</option>
+      {<option value={d} key="#{this.state.week}-#{d}">{d}</option> for d of calendar_map[this.state.week]}
+    </select>
+
+  render: ->
+    <div>
+      Select now:
+      <select onChange={(e) => this.handleWeekChoice(e)}>
+        <option value=''>Select week...</option>
+        {<option value={w} key={w}>{w}</option> for w of calendar_map}
+      </select>
+      {this.renderDaySelect() if this.state.week}
+    </div>
+
+
+class App extends React.Component
+  constructor: (props) ->
+    super props
+    this.state = {
+      day_idx: 0
+      renderSelector: true,
+      renderMain: false,
+    }
+
+    handleDateSelected: (e) ->
+      this.setState({
+        day_idx: e.state.day_idx,
+        renderSelector: false,
+        renderMain: true,
+      })
+
+  render: ->
+    <div>
+      {
+        <UrwDateSelector
+          handleDateSelected={=> this.handleDateSelected()}
+        /> \
+        if this.state.renderSelector
+      }
+      {
+        <UrwMainApp
+          day={this.state.day_idx}
+        /> \
+        if this.state.renderMain
+      }
     </div>
 
 
