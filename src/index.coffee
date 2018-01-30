@@ -36,13 +36,10 @@ import React from 'react'
 import {render} from 'react-dom'
 
 
-make_td = (c) -> <td>{c}</td>
+make_td = (c, class_name=null, key=null) ->
+  <td className={class_name} key={key}>{c}</td>
+
 make_tr = (c) -> <tr>{c}</tr>
-
-
-format_days = (days) ->
-  for day in days
-    make_td(day.day)
 
 
 class MonthWeekTd extends React.Component
@@ -70,10 +67,22 @@ class MonthWeekTr extends React.Component
       then ' mw_td_this_month'
       else ''
     )
+    fill_left_num = -(1 - this.props.days[0].day)
+    fill_right_num = 7 - this.props.days[this.props.days.length - 1].day
 
     <tr>
       <td className={class_name}>{this.props.week}</td>
+      {
+        make_td('', 'mw_td_base', "etd-#{this.props.week}-#{n}") \
+        for n in [1..fill_left_num] \
+        when fill_left_num
+      }
       {this.renderMonthWeekTd(day) for day in this.props.days}
+      {
+        make_td('', 'mw_td_base', "etd-#{this.props.week}-#{n}") \
+        for n in [1..fill_right_num] \
+        when fill_right_num
+      }
     </tr>
 
 
