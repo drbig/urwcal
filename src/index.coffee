@@ -200,7 +200,9 @@ class App extends React.Component
       renderMain: false,
     }
 
-    handleDateSelected: (day_idx) ->
+  handleDateSelected: (day_idx) ->
+      console.log "App.handleDateSelected run! -> #{day_idx}"
+
       this.setState({
         day_idx: day_idx,
         renderSelector: false,
@@ -217,7 +219,7 @@ class App extends React.Component
       }
       {
         <UrwMainApp
-          day={this.state.day_idx}
+          day_idx={this.state.day_idx}
         /> \
         if this.state.renderMain
       }
