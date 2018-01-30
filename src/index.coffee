@@ -164,8 +164,10 @@ class UrwDateSelector extends React.Component
     this.setState({week: week})
 
   handleDayChoice: (e) ->
-    day = e.target.value
-    console.log "Day selected? #{day}"
+    day_idx = e.target.value
+    console.log "Day selected? #{day_idx}"
+
+    this.props.handleDateSelected(day_idx)
 
   renderDaySelect: ->
     console.log "Day Select run!"
@@ -173,7 +175,7 @@ class UrwDateSelector extends React.Component
     <select onChange={(e) => this.handleDayChoice(e)}>
       <option value=''>Select day...</option>
       {
-        <option value={v} key="#{this.state.week}-#{d}">{d}</option> \
+        <option value={v} key="#{this.state.week}-#{d}">Day {d}</option> \
         for d, v of calendar_map[this.state.week]
       }
     </select>
@@ -198,9 +200,9 @@ class App extends React.Component
       renderMain: false,
     }
 
-    handleDateSelected: (e) ->
+    handleDateSelected: (day_idx) ->
       this.setState({
-        day_idx: e.state.day_idx,
+        day_idx: day_idx,
         renderSelector: false,
         renderMain: true,
       })
@@ -209,7 +211,7 @@ class App extends React.Component
     <div>
       {
         <UrwDateSelector
-          handleDateSelected={=> this.handleDateSelected()}
+          handleDateSelected={(day_idx) => this.handleDateSelected(day_idx)}
         /> \
         if this.state.renderSelector
       }
