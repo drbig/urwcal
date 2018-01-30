@@ -172,7 +172,10 @@ class UrwDateSelector extends React.Component
 
     <select onChange={(e) => this.handleDayChoice(e)}>
       <option value=''>Select day...</option>
-      {<option value={d} key="#{this.state.week}-#{d}">{d}</option> for d of calendar_map[this.state.week]}
+      {
+        <option value={v} key="#{this.state.week}-#{d}">{d}</option> \
+        for d, v of calendar_map[this.state.week]
+      }
     </select>
 
   render: ->
