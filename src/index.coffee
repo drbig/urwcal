@@ -37,12 +37,29 @@ class UrwDate
 
   to_s_short: ->
     day = this.day()
-    "#{day.day} of #{day.week}"
+    "day #{day.day} of #{day.week}"
 
 
 class UrwEvent
   constructor: (@deadline, @info) ->
     console.log "New Event: #{@deadline.to_s_short()} '#{@info}'"
+
+  days_till: (day_idx) ->
+    @deadline.day_idx - day_idx
+
+  days_till_s: (day_idx) ->
+    days = this.days_till(day_idx)
+
+    if days == 0
+      'today'
+    else if days == 1
+      'tomorrow'
+    else if days > 1
+      "in #{days} days"
+    else if days == -1
+      'yesterday'
+    else
+      "#{days} ago"
 
 
 #
@@ -208,8 +225,27 @@ class EventAddForm extends React.Component
     </form>
 
 
-tmp_print_event = (event) ->
-  <div>at {event.deadline.to_s_short()}, '{event.info}'</div>
+class EventTable extends React.Component
+  renderEvent: (event) ->
+    <tr>
+      <td>{event.days_till_s(this.props.today_idx)}</td>
+      <td>{event.info}</td>
+      <td>{event.deadline.to_s_short()}</td>
+    </tr>
+
+  render: ->
+    <table id='e_table'>
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>What</th>
+          <th>On</th>
+        </tr>
+      </thead>
+      <tbody>
+        {this.renderEvent(event) for event in this.props.events}
+      </tbody>
+    </table>
 
 
 class UrwMainApp extends React.Component
@@ -245,7 +281,12 @@ class UrwMainApp extends React.Component
         <EventAddForm
           add_new_event={(days, info) => this.handleAddEvent(days, info)}
         />
-        {tmp_print_event(event) for event in this.state.events}
+        {
+          <EventTable
+            today_idx={this.state.urw_date.day_idx} events={this.state.events}
+          /> \
+          if this.state.events.length > 0
+        }
       </div>
     </div>
 
