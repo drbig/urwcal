@@ -88,14 +88,29 @@ class MonthWeekTd extends React.Component
       else ''
     )
 
-    <td className={class_name}>{this.props.day.day}</td>
+    events_num = 0
+    for event in this.props.events
+      continue if event.deadline.day_idx != this.props.day.idx
+      events_num += 1
+
+    if events_num > 0
+      events_str = <span>({events_num})</span>
+    else
+      events_str = ''
+
+    <td className={class_name}>{this.props.day.day}{events_str}</td>
 
 
 class MonthWeekTr extends React.Component
   renderMonthWeekTd: (day) ->
     key = "mw-td-#{day.idx}"
 
-    <MonthWeekTd key={key} today={this.props.today} day={day} />
+    <MonthWeekTd
+      key={key}
+      today={this.props.today}
+      events={this.props.events}
+      day={day}
+    />
 
   render: ->
     class_name = 'mw_td_base mw_td_month'
@@ -130,6 +145,7 @@ class MonthTable extends React.Component
     <MonthWeekTr
       key={key}
       today={this.props.urw_date.day()}
+      events={this.props.events}
       week={week}
       days={days}
     />
@@ -283,7 +299,10 @@ class UrwMainApp extends React.Component
         <button onClick={=> this.handleMove(1)}>Next</button>
       </div>
       <div>
-        <MonthTable urw_date={this.state.urw_date} />
+        <MonthTable
+          urw_date={this.state.urw_date}
+          events={this.state.events}
+        />
         <EventAddForm
           add_new_event={(days, info) => this.handleAddEvent(days, info)}
         />
