@@ -149,33 +149,25 @@ class UrwMainApp extends React.Component
 class UrwDateSelector extends React.Component
   constructor: (props) ->
     super props
-    this.state = {
-      week: null,
-      day: null,
-    }
+    this.state = {week: null}
 
   handleWeekChoice: (e) ->
     week = e.target.value
-    console.log "Week choice? #{week}"
-
     if week == ''
       return
 
     this.setState({week: week})
 
   handleDayChoice: (e) ->
-    day_idx = e.target.value
-    console.log "Day selected? #{day_idx}"
-
+    day_idx = parseInt(e.target.value)
     this.props.handleDateSelected(day_idx)
 
   renderDaySelect: ->
-    console.log "Day Select run!"
 
     <select onChange={(e) => this.handleDayChoice(e)}>
       <option value=''>Select day...</option>
       {
-        <option value={v} key="#{this.state.week}-#{d}">Day {d}</option> \
+        <option value={v} key="di-#{v}">Day {d}</option> \
         for d, v of calendar_map[this.state.week]
       }
     </select>
@@ -201,8 +193,6 @@ class App extends React.Component
     }
 
   handleDateSelected: (day_idx) ->
-      console.log "App.handleDateSelected run! -> #{day_idx}"
-
       this.setState({
         day_idx: day_idx,
         renderSelector: false,
