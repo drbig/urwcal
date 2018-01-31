@@ -59,7 +59,7 @@ class UrwEvent
     else if days == -1
       'yesterday'
     else
-      "#{days} ago"
+      "#{Math.abs(days)} days ago"
 
 
 #
