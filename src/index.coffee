@@ -35,6 +35,15 @@ class UrwDate
     day = this.day()
     "Day #{day.day} of #{day.week}, #{day.month} (#{day.sub_season})"
 
+  to_s_short: ->
+    day = this.day()
+    "#{day.day} of #{day.week}"
+
+
+class UrwEvent
+  constructor: (@deadline, @info) ->
+    console.log "New Event: #{@deadline.to_s_short()} '#{@info}'"
+
 
 #
 # Web section
@@ -171,14 +180,15 @@ class EventAddForm extends React.Component
       50,
     )
 
-  handleSubmit: ->
-    console.log "Would add event: in #{this.state.days} days '#{this.state.info}' will happen"
+  handleAddEvent: ->
+    console.log "Add event: in #{this.state.days} days '#{this.state.info}' will happen"
+    this.props.add_new_event(this.state.days, this.state.info)
 
     document.getElementById(ID_EVENT_ADD_FORM).reset()
     this.setState(this._get_base_state())
 
   render: ->
-    <form id={ID_EVENT_ADD_FORM}>
+    <form id={ID_EVENT_ADD_FORM} onSubmit={-> false}>
       in
       <input
         type='text' placeholder='days'
@@ -191,25 +201,37 @@ class EventAddForm extends React.Component
         />
       <button
         disabled={this.state.invalid_input}
-        onClick={=> this.handleSubmit()}
+        onClick={=> this.handleAddEvent()}
       >
         Add event
       </button>
     </form>
 
 
+tmp_print_event = (event) ->
+  <div>at {event.deadline.to_s_short()}, '{event.info}'</div>
+
+
 class UrwMainApp extends React.Component
   constructor: (props) ->
     super props
     @urw_date = new UrwDate(this.props.day_idx)
+    @events = []
     this.state = {
       urw_date: @urw_date,
-      events: [],
+      events: @events,
     }
 
   handleMove: (n) ->
     @urw_date.move(n)
     this.setState({urw_date: @urw_date})
+
+  handleAddEvent: (days, info) ->
+    deadline = new UrwDate(
+      this.state.urw_date.day_idx + days % calendar_data.length
+    )
+    @events.push(new UrwEvent(deadline, info))
+    this.setState({events: @events})
 
   render: ->
     <div>
@@ -220,7 +242,10 @@ class UrwMainApp extends React.Component
       </div>
       <div>
         <MonthTable urw_date={this.state.urw_date} />
-        <EventAddForm />
+        <EventAddForm
+          add_new_event={(days, info) => this.handleAddEvent(days, info)}
+        />
+        {tmp_print_event(event) for event in this.state.events}
       </div>
     </div>
 
@@ -242,7 +267,6 @@ class UrwDateSelector extends React.Component
     this.props.handleDateSelected(day_idx)
 
   renderDaySelect: ->
-
     <select onChange={(e) => this.handleDayChoice(e)}>
       <option value=''>Select day...</option>
       {
