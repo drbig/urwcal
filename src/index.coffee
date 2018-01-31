@@ -12,6 +12,15 @@ for day, idx in calendar_data
 # yes, JS is fuckin' brain dead
 mod = (number, modulus) -> ((number % modulus) + modulus) % modulus
 
+maybe_get_int = (str) ->
+  try
+    num = parseInt(str)
+  catch err
+    return false
+
+  return false if num < 1
+  num
+
 
 class UrwDate
   constructor: (@day_idx) ->
@@ -123,11 +132,71 @@ class MonthTable extends React.Component
     </table>
 
 
+class EventAddForm extends React.Component
+  constructor: (props) ->
+    super props
+    this.state = {
+      invalid_input: true,
+      days: false,
+      info: '',
+    }
+
+  handleDays: (e) ->
+    days = maybe_get_int(e.target.value)
+    this.setState({days: days})
+
+    this.validateInput()
+
+  handleInfo: (e) ->
+    this.setState({info: e.target.value})
+
+    this.validateInput()
+
+  validateInput: ->
+    if this.state.days and this.state.info.length > 1
+      this.setState({invalid_input: false})
+    else
+      this.setState({invalid_input: true})
+
+  handleSubmit: ->
+    console.log "Would add event: in #{this.state.days} days '#{this.state.info}' will happen"
+
+    document.getElementById('event_add_form').reset()
+    this.setState({
+      invalid_input: true,
+      days: false,
+      info: '',
+    })
+
+  render: ->
+    <form id='event_add_form'>
+      in
+      <input
+        type='text' placeholder='days'
+        onChange={(e) => this.handleDays(e)}
+      />
+      days
+      <input
+        type='text' placeholder='this will happen'
+        onChange={(e) => this.handleInfo(e)}
+        />
+      <button
+        disabled={this.state.invalid_input}
+        onClick={=> this.handleSubmit()}
+      >
+        Add event
+      </button>
+    </form>
+
+
 class UrwMainApp extends React.Component
   constructor: (props) ->
     super props
     @urw_date = new UrwDate(this.props.day_idx)
-    this.state = {urw_date: @urw_date}
+    this.state = {
+      urw_date: @urw_date,
+      events: [],
+    }
 
   handleMove: (n) ->
     @urw_date.move(n)
@@ -142,6 +211,7 @@ class UrwMainApp extends React.Component
       </div>
       <div>
         <MonthTable urw_date={this.state.urw_date} />
+        <EventAddForm />
       </div>
     </div>
 
