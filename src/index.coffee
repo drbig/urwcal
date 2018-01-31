@@ -12,13 +12,13 @@ for day, idx in calendar_data
 # yes, JS is fuckin' brain dead
 mod = (number, modulus) -> ((number % modulus) + modulus) % modulus
 
-maybe_get_int = (str) ->
+maybe_get_days = (str) ->
   try
     num = parseInt(str)
   catch err
     return false
 
-  return false if num < 1
+  return false if num < 1 or num > 359
   num
 
 
@@ -133,16 +133,22 @@ class MonthTable extends React.Component
 
 
 class EventAddForm extends React.Component
-  constructor: (props) ->
-    super props
-    this.state = {
+  ID_EVENT_ADD_FORM = 'event_add_form'
+
+  _get_base_state: ->
+    {
       invalid_input: true,
       days: false,
       info: '',
     }
 
+  constructor: (props) ->
+    super props
+    @validate_timer = null
+    this.state = this._get_base_state()
+
   handleDays: (e) ->
-    days = maybe_get_int(e.target.value)
+    days = maybe_get_days(e.target.value)
     this.setState({days: days})
 
     this.validateInput()
@@ -153,23 +159,26 @@ class EventAddForm extends React.Component
     this.validateInput()
 
   validateInput: ->
-    if this.state.days and this.state.info.length > 1
-      this.setState({invalid_input: false})
-    else
-      this.setState({invalid_input: true})
+    clearTimeout(@validate_timer) if @validate_timer?
+
+    @validate_timer = setTimeout(
+      =>
+        if this.state.days and this.state.info.length > 3
+          this.setState({invalid_input: false})
+        else
+          this.setState({invalid_input: true})
+      ,
+      50,
+    )
 
   handleSubmit: ->
     console.log "Would add event: in #{this.state.days} days '#{this.state.info}' will happen"
 
-    document.getElementById('event_add_form').reset()
-    this.setState({
-      invalid_input: true,
-      days: false,
-      info: '',
-    })
+    document.getElementById(ID_EVENT_ADD_FORM).reset()
+    this.setState(this._get_base_state())
 
   render: ->
-    <form id='event_add_form'>
+    <form id={ID_EVENT_ADD_FORM}>
       in
       <input
         type='text' placeholder='days'
