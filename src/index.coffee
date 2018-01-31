@@ -42,7 +42,6 @@ class UrwDate
 
 class UrwEvent
   constructor: (@deadline, @info) ->
-    console.log "New Event: #{@deadline.to_s_short()} '#{@info}'"
 
   days_till: (day_idx) ->
     @deadline.day_idx - day_idx
@@ -198,7 +197,6 @@ class EventAddForm extends React.Component
     )
 
   handleAddEvent: ->
-    console.log "Add event: in #{this.state.days} days '#{this.state.info}' will happen"
     this.props.add_new_event(this.state.days, this.state.info)
 
     document.getElementById(ID_EVENT_ADD_FORM).reset()
@@ -249,6 +247,8 @@ class EventTable extends React.Component
 
 
 class UrwMainApp extends React.Component
+  EVENT_KEEP_TIME = -4
+
   constructor: (props) ->
     super props
     @urw_date = new UrwDate(this.props.day_idx)
@@ -260,7 +260,13 @@ class UrwMainApp extends React.Component
 
   handleMove: (n) ->
     @urw_date.move(n)
-    this.setState({urw_date: @urw_date})
+    @events = (
+      e for e in @events when e.days_till(@urw_date.day_idx) > EVENT_KEEP_TIME
+    )
+    this.setState({
+      urw_date: @urw_date,
+      events: @events,
+    })
 
   handleAddEvent: (days, info) ->
     deadline = new UrwDate(
