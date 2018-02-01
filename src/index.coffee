@@ -70,6 +70,9 @@ import React from 'react'
 import {render} from 'react-dom'
 
 
+URW_LS_KEY = 'urw_main_app_state'
+
+
 make_option = (l, key=null) ->
   <option value='{l}' key={key}>{l}</option>
 
@@ -268,7 +271,7 @@ class UrwMainApp extends React.Component
   constructor: (props) ->
     super props
     @urw_date = new UrwDate(this.props.day_idx)
-    @events = []
+    @events = this.props.initial_events
     this.state = {
       urw_date: @urw_date,
       events: @events,
@@ -292,12 +295,16 @@ class UrwMainApp extends React.Component
     @events.sort((a, b) -> a.deadline.day_idx - b.deadline.day_idx)
     this.setState({events: @events})
 
+  saveState: ->
+    localStorage.setItem(URW_LS_KEY, JSON.stringify(this.state))
+
   render: ->
     <div>
       <div>
         <button onClick={=> this.handleMove(-1)}>Prev</button>
         <span>{this.state.urw_date.to_s()}</span>
         <button onClick={=> this.handleMove(1)}>Next</button>
+        <button onClick={=> this.saveState()}>Save state</button>
       </div>
       <div>
         <MonthTable
@@ -358,28 +365,44 @@ class App extends React.Component
     super props
     this.state = {
       day_idx: 0
-      renderSelector: true,
+      initial_events: [],
       renderMain: false,
     }
 
   handleDateSelected: (day_idx) ->
       this.setState({
         day_idx: day_idx,
-        renderSelector: false,
         renderMain: true,
       })
 
+  loadState: ->
+    try
+      data = JSON.parse(localStorage.getItem(URW_LS_KEY))
+      initial_events = (
+        new UrwEvent(new UrwDate(e.deadline.day_idx), e.info) \
+        for e in data.events
+      )
+      this.setState({
+        day_idx: data.urw_date.day_idx,
+        initial_events: initial_events,
+        renderMain: true,
+      })
+    catch
+      console.log 'No state or error'
+
   render: ->
     <div>
+      <button onClick={=> this.loadState()}>Load state</button>
       {
         <UrwDateSelector
           handleDateSelected={(day_idx) => this.handleDateSelected(day_idx)}
         /> \
-        if this.state.renderSelector
+        if not this.state.renderMain
       }
       {
         <UrwMainApp
           day_idx={this.state.day_idx}
+          initial_events={this.state.initial_events}
         /> \
         if this.state.renderMain
       }
