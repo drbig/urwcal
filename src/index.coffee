@@ -97,7 +97,7 @@ class MonthWeekTd extends React.Component
       events_num += 1
 
     if events_num > 0
-      events_str = <span>({events_num})</span>
+      events_str = <div className='mw_td_events_cnt'>({events_num})</div>
     else
       events_str = ''
 
@@ -222,7 +222,7 @@ class EventAddForm extends React.Component
     this.setState(this._get_base_state())
 
   render: ->
-    <form id={ID_EVENT_ADD_FORM} onSubmit={-> false}>
+    <form className='box' id={ID_EVENT_ADD_FORM} onSubmit={-> false}>
       in
       <input
         type='text' placeholder='days'
@@ -244,7 +244,17 @@ class EventAddForm extends React.Component
 
 class EventTable extends React.Component
   renderEvent: (event, idx) ->
-    <tr key="tr-e-#{idx}">
+    days_till = event.days_till(this.props.today_idx)
+
+    class_name = null
+    if days_till < 0
+      class_name = 'event_past'
+    else if days_till == 0
+      class_name = 'event_today'
+    else if days_till == 1
+      class_name = 'event_tomorrow'
+
+    <tr key="tr-e-#{idx}" className={class_name}>
       <td>{event.days_till_s(this.props.today_idx)}</td>
       <td>{event.info}</td>
       <td>{event.deadline.to_s_short()}</td>
@@ -300,7 +310,7 @@ class UrwMainApp extends React.Component
 
   render: ->
     <div>
-      <div>
+      <div className='box'>
         <button onClick={=> this.handleMove(-1)}>Prev</button>
         <span>{this.state.urw_date.to_s()}</span>
         <button onClick={=> this.handleMove(1)}>Next</button>
@@ -350,7 +360,7 @@ class UrwDateSelector extends React.Component
     </select>
 
   render: ->
-    <div>
+    <div className='box'>
       Select now:
       <select onChange={(e) => this.handleWeekChoice(e)}>
         <option value=''>Select week...</option>
@@ -392,7 +402,10 @@ class App extends React.Component
 
   render: ->
     <div>
-      <button onClick={=> this.loadState()}>Load state</button>
+      {
+        <button onClick={=> this.loadState()}>Load state</button> \
+        if not this.state.renderMain
+      }
       {
         <UrwDateSelector
           handleDateSelected={(day_idx) => this.handleDateSelected(day_idx)}
