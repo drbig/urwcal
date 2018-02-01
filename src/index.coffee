@@ -289,6 +289,7 @@ class UrwMainApp extends React.Component
       this.state.urw_date.day_idx + days % calendar_data.length
     )
     @events.push(new UrwEvent(deadline, info))
+    @events.sort((a, b) -> a.deadline.day_idx - b.deadline.day_idx)
     this.setState({events: @events})
 
   render: ->
