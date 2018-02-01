@@ -85,6 +85,7 @@ make_tr = (c) -> <tr>{c}</tr>
 class MonthWeekTd extends React.Component
   render: ->
     class_name = 'mw_td_base mw_td_day'
+    class_name += " #{this.props.day.sub_season.toLowerCase()}"
     class_name += (
       if this.props.day.idx == this.props.today.idx
       then ' mw_td_this_day'
