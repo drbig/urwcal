@@ -240,8 +240,8 @@ class EventAddForm extends React.Component
 
 
 class EventTable extends React.Component
-  renderEvent: (event) ->
-    <tr>
+  renderEvent: (event, idx) ->
+    <tr key="tr-e-#{idx}">
       <td>{event.days_till_s(this.props.today_idx)}</td>
       <td>{event.info}</td>
       <td>{event.deadline.to_s_short()}</td>
@@ -257,7 +257,7 @@ class EventTable extends React.Component
         </tr>
       </thead>
       <tbody>
-        {this.renderEvent(event) for event in this.props.events}
+        {this.renderEvent(event, idx) for event, idx in this.props.events}
       </tbody>
     </table>
 
