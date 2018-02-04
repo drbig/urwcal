@@ -317,7 +317,7 @@ class App extends React.Component
       <div>
         <AtDateWidget
           class_name='box'
-          intro_text='Select starting day'
+          intro_text='Select starting day:'
           submit_text='Go'
           onClick={(day) => this.initState(day)}
         />
