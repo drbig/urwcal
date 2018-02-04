@@ -101,7 +101,7 @@ class AddEventWidget extends React.Component
     this.state = {
       description: '',
       mode: MODES[0],
-      error: true,
+      error: false,
     }
 
   handleModeSelect: (e) ->
@@ -115,6 +115,10 @@ class AddEventWidget extends React.Component
         description: e.target.value,
         error: false,
       })
+
+  handleClick: (day) ->
+    console.log 'AddEventWidget ->'
+    console.log day
 
   render: ->
     input_class_name = 'aew_desc'
@@ -136,6 +140,8 @@ class AddEventWidget extends React.Component
       {
         <InDaysWidget
           submit_text='Add Event'
+          day={this.props.day}
+          onClick={(day) => this.handleClick(day)}
         /> \
         if this.state.mode == MODE_IN_DAYS
       }
@@ -143,6 +149,7 @@ class AddEventWidget extends React.Component
         <AtDateWidget
           intro_text='At'
           submit_text='Add Event'
+          onClick={(day) => this.handleClick(day)}
         /> \
         if this.state.mode == MODE_AT_DATE
       }
@@ -153,20 +160,16 @@ class TodayWidget extends React.Component
   _get_today: ->
     day_to_s(this.props.day) + " (Year: #{this.props.year})"
 
-  handleClick: (e, n) ->
-    e.preventDefault()
-    this.props.moveDay(n)
-
   render: ->
     <div className='box'>
       <button
-        onClick={(e) => this.handleClick(e, -1)}
+        onClick={=> this.props.moveDay(-1)}
         disabled={this.props.day == 0 and this.props.year == 1}
       >
         Prev
       </button>
       {this._get_today()}
-      <button onClick={(e) => this.handleClick(e, 1)}>
+      <button onClick={=> this.props.moveDay(1)}>
         Next
       </button>
     </div>
@@ -184,11 +187,12 @@ class InDaysWidget extends React.Component
     this.setState({days: e.target.value})
 
   handleClick: (e) ->
-    e.preventDefault()
     val = parseInt(this.state.days)
     if (val > 0) and (val < 361)
       this.setState({error: false})
-      this.props.onClick(val)
+
+      day = mod(this.props.day + val, CALENDAR.length)
+      this.props.onClick(day)
     else
       this.setState({error: true})
 
@@ -226,7 +230,6 @@ class AtDateWidget extends React.Component
     this.setState({day: e.target.value})
 
   handleClick: (e) ->
-    e.preventDefault()
     day = CALENDAR_MAP[this.state.week][this.state.day]
     if day is undefined
       this.setState({error: true})
@@ -310,7 +313,7 @@ class App extends React.Component
           year={this.state.year}
           events={this.state.events}
         />
-        <AddEventWidget />
+        <AddEventWidget day={this.state.day} />
         <span className='footer'>v{VERSION}</span>
       </div>
     else
