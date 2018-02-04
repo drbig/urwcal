@@ -1,100 +1,31 @@
-#
-# Logic section
-#
+CALENDAR = require '../data/calendar.json'
+CALENDAR_MAP = {}
+for day, idx in CALENDAR
+  CALENDAR_MAP[day.week] ||= {}
+  CALENDAR_MAP[day.week]["#{day.day}"] = idx
 
-calendar_data = require '../data/calendar.json'
-calendar_map = {}
-for day, idx in calendar_data
-  calendar_map[day.week] ||= {}
-  calendar_map[day.week]["#{day.day}"] = idx
-
-
-# yes, JS is fuckin' brain dead
-mod = (number, modulus) -> ((number % modulus) + modulus) % modulus
-
-maybe_get_days = (str) ->
-  try
-    num = parseInt(str)
-  catch err
-    return false
-
-  return false if num < 1 or num > 359
-  num
-
-
-class UrwDate
-  constructor: (@day_idx) ->
-
-  day: ->
-    calendar_data[@day_idx]
-
-  move: (n) ->
-    @day_idx = mod @day_idx + n, calendar_data.length
-
-  to_s: ->
-    day = this.day()
-    "Day #{day.day} of #{day.week}, #{day.month} (#{day.sub_season})"
-
-  to_s_short: ->
-    day = this.day()
-    "day #{day.day} of #{day.week}"
-
-
-class UrwEvent
-  constructor: (@deadline, @info) ->
-
-  days_till: (day_idx) ->
-    @deadline.day_idx - day_idx
-
-  days_till_s: (day_idx) ->
-    days = this.days_till(day_idx)
-
-    if days == 0
-      'today'
-    else if days == 1
-      'tomorrow'
-    else if days > 1
-      "in #{days} days"
-    else if days == -1
-      'yesterday'
-    else
-      "#{Math.abs(days)} days ago"
-
-
-#
-# Web section
-#
 
 require './index.less'
 import React from 'react'
 import {render} from 'react-dom'
 
 
-URW_LS_KEY = 'urw_main_app_state'
+day_to_s = (day) ->
+  date = CALENDAR[day]
+  "Day #{date.day} of #{date.week}, #{date.month} (#{date.sub_season})"
+
+mod = (number, modulus) -> ((number % modulus) + modulus) % modulus
 
 
-make_option = (l, key=null) ->
-  <option value='{l}' key={key}>{l}</option>
-
-make_td = (c, class_name=null, key=null) ->
-  <td className={class_name} key={key}>{c}</td>
-
-make_tr = (c) -> <tr>{c}</tr>
-
-
-class MonthWeekTd extends React.Component
-  render: ->
+class MonthTableWidget extends React.Component
+  renderMonthWeekTd: (events, today, day) ->
     class_name = 'mw_td_base mw_td_day'
-    class_name += " #{this.props.day.sub_season.toLowerCase()}"
-    class_name += (
-      if this.props.day.idx == this.props.today.idx
-      then ' mw_td_this_day'
-      else ''
-    )
+    class_name += " #{day.sub_season.toLowerCase()}"
+    class_name += if today.idx == day.idx then ' mw_td_this_day' else ''
 
     events_num = 0
-    for event in this.props.events
-      continue if event.deadline.day_idx != this.props.day.idx
+    for event in events
+      continue if event.deadline_at != today.idx
       events_num += 1
 
     if events_num > 0
@@ -102,325 +33,295 @@ class MonthWeekTd extends React.Component
     else
       events_str = ''
 
-    <td className={class_name}>{this.props.day.day}{events_str}</td>
+    <td className={class_name} key="mtw-td-#{day.idx}">
+      {day.day}{events_str}
+    </td>
 
-
-class MonthWeekTr extends React.Component
-  renderMonthWeekTd: (day) ->
-    key = "mw-td-#{day.idx}"
-
-    <MonthWeekTd
-      key={key}
-      today={this.props.today}
-      events={this.props.events}
-      day={day}
-    />
-
-  render: ->
+  renderMonthWeekTr: (events, today, week, days) ->
     class_name = 'mw_td_base mw_td_month'
-    class_name += (
-      if this.props.week == this.props.today.week
-      then ' mw_td_this_month'
-      else ''
-    )
-    fill_left_num = -(1 - this.props.days[0].day)
-    fill_right_num = 7 - this.props.days[this.props.days.length - 1].day
+    class_name += if today.week == week then ' mw_td_this_month' else ''
 
-    <tr>
-      <td className={class_name}>{this.props.week}</td>
+    fill_left_num = -(1 - days[0].day)
+    fill_right_num = 7 - days[days.length - 1].day
+
+    <tr key="mtw-tr-#{week}">
+      <td className={class_name}>{week}</td>
       {
-        make_td('', 'mw_td_base mw_td_empty', "etd-#{this.props.week}-#{n}") \
+        <td className='mw_td_base mw_td_empty' key="mtw-td-b-#{n}"/> \
         for n in [1..fill_left_num] \
         when fill_left_num
       }
-      {this.renderMonthWeekTd(day) for day in this.props.days}
+      {this.renderMonthWeekTd(events, today, day) for day in days}
       {
-        make_td('', 'mw_td_base mw_td_empty', "etd-#{this.props.week}-#{n}") \
+        <td className='mw_td_base mw_td_empty' key="mtw-td-a-#{n}"/> \
         for n in [1..fill_right_num] \
         when fill_right_num
       }
     </tr>
 
-
-class MonthTable extends React.Component
-  renderMonthWeekTr: (week, days) ->
-    key = "mw-tr-#{week}"
-
-    <MonthWeekTr
-      key={key}
-      today={this.props.urw_date.day()}
-      events={this.props.events}
-      week={week}
-      days={days}
-    />
-
   render: ->
-    month_num = this.props.urw_date.day().month_num
-    days_lst = (day for day in calendar_data when day.month_num == month_num)
-    month_map = {}
-    for day in days_lst
-      month_map[day.week] ||= []
-      month_map[day.week].push(day)
+    date = CALENDAR[this.props.day]
+    events = (
+      e for e in this.props.events \
+      when CALENDAR[e.deadline_at].month_num == date.month_num \
+      and e.year == this.props.year
+    )
 
-    init_day = {week: days_lst[0].week, day: days_lst[0].day}
+    days = (day for day in CALENDAR when day.month_num == date.month_num)
+    months = {}
+    for day in days
+      months[day.week] ||= []
+      months[day.week].push(day)
+
+    init_day = {week: days[0].week, day: days[0].day}
 
     <table id='mt_table'>
       <thead>
         <tr>
           <th>Week</th>
-          <th colSpan='7'>{this.props.urw_date.day().month}</th>
+          <th colSpan='7'>{date.month}</th>
         </tr>
       </thead>
       <tbody>
-        {this.renderMonthWeekTr(week, days) for week, days of month_map}
+        {
+          this.renderMonthWeekTr(events, date, week, days) \
+          for week, days of months
+        }
       </tbody>
     </table>
 
 
-class EventAddForm extends React.Component
-  ID_EVENT_ADD_FORM = 'event_add_form'
-
-  _get_base_state: ->
-    {
-      invalid_input: true,
-      days: false,
-      info: '',
-    }
+class AddEventWidget extends React.Component
+  MODE_IN_DAYS = 'In days'
+  MODE_AT_DATE = 'At Date'
+  MODES = [MODE_IN_DAYS, MODE_AT_DATE]
 
   constructor: (props) ->
     super props
-    @validate_timer = null
-    this.state = this._get_base_state()
+    this.state = {
+      description: '',
+      mode: MODES[0],
+      error: true,
+    }
 
-  handleDays: (e) ->
-    days = maybe_get_days(e.target.value)
-    this.setState({days: days})
-
-    this.validateInput()
+  handleModeSelect: (e) ->
+    this.setState({mode: e.target.value})
 
   handleInfo: (e) ->
-    this.setState({info: e.target.value})
-
-    this.validateInput()
-
-  validateInput: ->
-    clearTimeout(@validate_timer) if @validate_timer?
-
-    @validate_timer = setTimeout(
-      =>
-        if this.state.days and this.state.info.length > 3
-          this.setState({invalid_input: false})
-        else
-          this.setState({invalid_input: true})
-      ,
-      50,
-    )
-
-  handleAddEvent: ->
-    this.props.add_new_event(this.state.days, this.state.info)
-
-    document.getElementById(ID_EVENT_ADD_FORM).reset()
-    this.setState(this._get_base_state())
+    if e.target.value.length < 5
+      this.setState({error: true})
+    else
+      this.setState({
+        description: e.target.value,
+        error: false,
+      })
 
   render: ->
-    <form className='box' id={ID_EVENT_ADD_FORM} onSubmit={-> false}>
-      in
+    input_class_name = 'aew_desc'
+    input_class_name += if this.state.error then ' err' else ''
+
+    <div className='box'>
       <input
-        type='text' placeholder='days'
-        onChange={(e) => this.handleDays(e)}
-      />
-      days
-      <input
-        type='text' placeholder='this will happen'
+        className={input_class_name}
+        placeholder='What will happen...'
+        type='text'
         onChange={(e) => this.handleInfo(e)}
-        />
-      <button
-        disabled={this.state.invalid_input}
-        onClick={=> this.handleAddEvent()}
+      />
+      <select
+        onChange={(e) => this.handleModeSelect(e)}
+        value={this.state.mode}
       >
-        Add event
-      </button>
-    </form>
-
-
-class EventTable extends React.Component
-  renderEvent: (event, idx) ->
-    days_till = event.days_till(this.props.today_idx)
-
-    class_name = null
-    if days_till < 0
-      class_name = 'event_past'
-    else if days_till == 0
-      class_name = 'event_today'
-    else if days_till == 1
-      class_name = 'event_tomorrow'
-
-    <tr key="tr-e-#{idx}" className={class_name}>
-      <td>{event.days_till_s(this.props.today_idx)}</td>
-      <td>{event.info}</td>
-      <td>{event.deadline.to_s_short()}</td>
-    </tr>
-
-  render: ->
-    <table id='e_table'>
-      <thead>
-        <tr>
-          <th>When</th>
-          <th>What</th>
-          <th>On</th>
-        </tr>
-      </thead>
-      <tbody>
-        {this.renderEvent(event, idx) for event, idx in this.props.events}
-      </tbody>
-    </table>
-
-
-class UrwMainApp extends React.Component
-  EVENT_KEEP_TIME = -4
-
-  constructor: (props) ->
-    super props
-    @urw_date = new UrwDate(this.props.day_idx)
-    @events = this.props.initial_events
-    this.state = {
-      urw_date: @urw_date,
-      events: @events,
-    }
-
-  handleMove: (n) ->
-    @urw_date.move(n)
-    @events = (
-      e for e in @events when e.days_till(@urw_date.day_idx) > EVENT_KEEP_TIME
-    )
-    this.setState({
-      urw_date: @urw_date,
-      events: @events,
-    })
-
-  handleAddEvent: (days, info) ->
-    deadline = new UrwDate(
-      this.state.urw_date.day_idx + days % calendar_data.length
-    )
-    @events.push(new UrwEvent(deadline, info))
-    @events.sort((a, b) -> a.deadline.day_idx - b.deadline.day_idx)
-    this.setState({events: @events})
-
-  saveState: ->
-    localStorage.setItem(URW_LS_KEY, JSON.stringify(this.state))
-
-  render: ->
-    <div>
-      <div className='box'>
-        <button onClick={=> this.handleMove(-1)}>Prev</button>
-        <span>{this.state.urw_date.to_s()}</span>
-        <button onClick={=> this.handleMove(1)}>Next</button>
-        <button onClick={=> this.saveState()}>Save state</button>
-      </div>
-      <div>
-        <MonthTable
-          urw_date={this.state.urw_date}
-          events={this.state.events}
-        />
-        <EventAddForm
-          add_new_event={(days, info) => this.handleAddEvent(days, info)}
-        />
-        {
-          <EventTable
-            today_idx={this.state.urw_date.day_idx} events={this.state.events}
-          /> \
-          if this.state.events.length > 0
-        }
-      </div>
+        {<option value={d} key={d}>{d}</option> for d in MODES}
+      </select>
+      {
+        <InDaysWidget
+          submit_text='Add Event'
+        /> \
+        if this.state.mode == MODE_IN_DAYS
+      }
+      {
+        <AtDateWidget
+          intro_text='At'
+          submit_text='Add Event'
+        /> \
+        if this.state.mode == MODE_AT_DATE
+      }
     </div>
 
 
-class UrwDateSelector extends React.Component
-  constructor: (props) ->
-    super props
-    this.state = {week: null}
+class TodayWidget extends React.Component
+  _get_today: ->
+    day_to_s(this.props.day) + " (Year: #{this.props.year})"
 
-  handleWeekChoice: (e) ->
-    week = e.target.value
-    if week == ''
-      return
-
-    this.setState({week: week})
-
-  handleDayChoice: (e) ->
-    day_idx = parseInt(e.target.value)
-    this.props.handleDateSelected(day_idx)
-
-  renderDaySelect: ->
-    <select onChange={(e) => this.handleDayChoice(e)}>
-      <option value=''>Select day...</option>
-      {
-        <option value={v} key="di-#{v}">Day {d}</option> \
-        for d, v of calendar_map[this.state.week]
-      }
-    </select>
+  handleClick: (e, n) ->
+    e.preventDefault()
+    this.props.moveDay(n)
 
   render: ->
     <div className='box'>
-      Select now:
-      <select onChange={(e) => this.handleWeekChoice(e)}>
-        <option value=''>Select week...</option>
-        {<option value={w} key={w}>{w}</option> for w of calendar_map}
+      <button
+        onClick={(e) => this.handleClick(e, -1)}
+        disabled={this.props.day == 0 and this.props.year == 1}
+      >
+        Prev
+      </button>
+      {this._get_today()}
+      <button onClick={(e) => this.handleClick(e, 1)}>
+        Next
+      </button>
+    </div>
+
+
+class InDaysWidget extends React.Component
+  constructor: (props) ->
+    super props
+    this.state = {
+      days: 7,
+      error: false,
+    }
+
+  handleValue: (e) ->
+    this.setState({days: e.target.value})
+
+  handleClick: (e) ->
+    e.preventDefault()
+    val = parseInt(this.state.days)
+    if (val > 0) and (val < 361)
+      this.setState({error: false})
+      this.props.onClick(val)
+    else
+      this.setState({error: true})
+
+  render: ->
+    input_class_name = 'idw_days'
+    input_class_name += if this.state.error then ' err' else ''
+
+    <div className={this.props.class_name}>
+      In
+      <input
+        className={input_class_name}
+        type='text' value={this.state.days}
+        onChange={(e) => this.handleValue(e)}
+      />
+      {if this.state.days > 1 then 'days' else 'day'}
+      <button onClick={(e) => this.handleClick(e)}>
+        {this.props.submit_text}
+      </button>
+    </div>
+
+
+class AtDateWidget extends React.Component
+  constructor: (props) ->
+    super props
+    this.state = {
+      week: CALENDAR[0].week,
+      day: "#{CALENDAR[0].day}",
+      error: false,
+    }
+
+  handleWeekSelect: (e) ->
+    this.setState({week: e.target.value})
+
+  handleDaySelect: (e) ->
+    this.setState({day: e.target.value})
+
+  handleClick: (e) ->
+    e.preventDefault()
+    day = CALENDAR_MAP[this.state.week][this.state.day]
+    if day is undefined
+      this.setState({error: true})
+    else
+      this.setState({error: false})
+      this.props.onClick(day)
+
+  render: ->
+    <div className={this.props.class_name}>
+      {this.props.intro_text}
+      <select
+        className={if this.state.error then 'err' else ''}
+        onChange={(e) => this.handleDaySelect(e)}
+        value={this.state.day}
+      >
+        {<option value={d} key={d}>day {d}</option> for d in [1..7]}
       </select>
-      {this.renderDaySelect() if this.state.week}
+      of
+      <select
+        onChange={(e) => this.handleWeekSelect(e)}
+        value={this.state.week}
+      >
+        {<option value={w} key={w}>{w}</option> for w of CALENDAR_MAP}
+      </select>
+      <button onClick={(e) => this.handleClick(e)}>
+        {this.props.submit_text}
+      </button>
     </div>
 
 
 class App extends React.Component
+  VERSION = '0.0.2'
+  LS_KEY = 'urw_cal_state'
+
   constructor: (props) ->
     super props
-    this.state = {
-      day_idx: 0
-      initial_events: [],
-      renderMain: false,
-    }
 
-  handleDateSelected: (day_idx) ->
-      this.setState({
-        day_idx: day_idx,
-        renderMain: true,
-      })
+    initial_state = JSON.parse(localStorage.getItem(LS_KEY))
+    if not initial_state?
+      initial_state = {
+        day: 0,
+        year: 1,
+        events: [],
+        is_ready: false,
+      }
 
-  loadState: ->
-    try
-      data = JSON.parse(localStorage.getItem(URW_LS_KEY))
-      initial_events = (
-        new UrwEvent(new UrwDate(e.deadline.day_idx), e.info) \
-        for e in data.events
-      )
-      this.setState({
-        day_idx: data.urw_date.day_idx,
-        initial_events: initial_events,
-        renderMain: true,
-      })
-    catch
-      console.log 'No state or error'
+    this.state = initial_state
+
+  componentWillUpdate: (nextProps, nextState) ->
+    localStorage.setItem(LS_KEY, JSON.stringify(nextState))
+
+  initState: (day) ->
+    this.setState({
+      day: day,
+      is_ready: true,
+    })
+
+  moveDay: (n) ->
+    new_day = this.state.day + n
+    year = this.state.year
+    if new_day > (CALENDAR.length - 1)
+      year += 1
+    else if new_day < 0
+      year -= 1
+
+    this.setState({
+      day: mod(new_day, CALENDAR.length),
+      year: year,
+    })
 
   render: ->
-    <div>
-      {
-        <button onClick={=> this.loadState()}>Load state</button> \
-        if not this.state.renderMain
-      }
-      {
-        <UrwDateSelector
-          handleDateSelected={(day_idx) => this.handleDateSelected(day_idx)}
-        /> \
-        if not this.state.renderMain
-      }
-      {
-        <UrwMainApp
-          day_idx={this.state.day_idx}
-          initial_events={this.state.initial_events}
-        /> \
-        if this.state.renderMain
-      }
-    </div>
-
+    if this.state.is_ready
+      <div>
+        <TodayWidget
+          day={this.state.day}
+          year={this.state.year}
+          moveDay={(n) => this.moveDay(n)}
+        />
+        <MonthTableWidget
+          day={this.state.day}
+          year={this.state.year}
+          events={this.state.events}
+        />
+        <AddEventWidget />
+        <span className='footer'>v{VERSION}</span>
+      </div>
+    else
+      <div>
+        <AtDateWidget
+          class_name='box'
+          intro_text='Select starting day'
+          submit_text='Go'
+          onClick={(day) => this.initState(day)}
+        />
+        <span className='footer'>v{VERSION}</span>
+      </div>
 
 render <App />, document.getElementById('app')
