@@ -14,6 +14,12 @@ day_to_s = (day) ->
   date = CALENDAR[day]
   "Day #{date.day} of #{date.week}, #{date.month} (#{date.sub_season})"
 
+days_till_event = (year, day, event) ->
+  (
+    ((event.deadline_at.year - year) * CALENDAR.length) +
+    (event.deadline_at.day - day)
+  )
+
 mod = (number, modulus) -> ((number % modulus) + modulus) % modulus
 
 
@@ -25,7 +31,7 @@ class MonthTableWidget extends React.Component
 
     events_num = 0
     for event in events
-      continue if event.deadline_at != today.idx
+      continue if event.deadline_at.day != day.idx
       events_num += 1
 
     if events_num > 0
@@ -63,8 +69,8 @@ class MonthTableWidget extends React.Component
     date = CALENDAR[this.props.day]
     events = (
       e for e in this.props.events \
-      when CALENDAR[e.deadline_at].month_num == date.month_num \
-      and e.year == this.props.year
+      when CALENDAR[e.deadline_at.day].month_num == date.month_num \
+      and e.deadline_at.year == this.props.year
     )
 
     days = (day for day in CALENDAR when day.month_num == date.month_num)
@@ -87,6 +93,49 @@ class MonthTableWidget extends React.Component
           this.renderMonthWeekTr(events, date, week, days) \
           for week, days of months
         }
+      </tbody>
+    </table>
+
+
+class EventsTableWidget extends React.Component
+  renderEvent: (event) ->
+    days_till = days_till_event(this.props.year, this.props.day, event)
+
+    days_till_s = if days_till == 0
+        'today'
+      else if days_till == -1
+        'yesterday'
+      else if days_till == 1
+        'tomorrow'
+      else if days_till > 1
+        "in #{days_till} days"
+      else
+        "#{Math.abs(days_till)} days ago"
+
+    class_name = if days_till < 0
+        class_name = 'event_past'
+      else if days_till == 0
+        class_name = 'event_today'
+      else if days_till == 1
+        class_name = 'event_tomorrow'
+      else
+        null
+
+    <tr key="tr-e-#{event.key}" className={class_name}>
+      <td>{days_till_s}</td>
+      <td>{event.description}</td>
+    </tr>
+
+  render: ->
+    <table id='e_table'>
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>What</th>
+        </tr>
+      </thead>
+      <tbody>
+        {this.renderEvent(event) for event in this.props.events}
       </tbody>
     </table>
 
@@ -117,8 +166,10 @@ class AddEventWidget extends React.Component
       })
 
   handleClick: (day) ->
-    console.log 'AddEventWidget ->'
-    console.log day
+    if this.state.error
+      return
+
+    this.props.onClick(day, this.state.description)
 
   render: ->
     input_class_name = 'aew_desc'
@@ -261,8 +312,9 @@ class AtDateWidget extends React.Component
 
 
 class App extends React.Component
-  VERSION = '0.0.2'
+  EVENT_KEEP_UNTIL = -30
   LS_KEY = 'urw_cal_state'
+  VERSION = '0.0.2'
 
   constructor: (props) ->
     super props
@@ -289,16 +341,51 @@ class App extends React.Component
 
   moveDay: (n) ->
     new_day = this.state.day + n
-    year = this.state.year
+    new_year = this.state.year
     if new_day > (CALENDAR.length - 1)
-      year += 1
+      new_year += 1
     else if new_day < 0
-      year -= 1
+      new_year -= 1
+
+    if new_day > 1 or new_year > this.state.year
+      new_events = (
+        e for e in this.state.events \
+        when days_till_event(new_year, new_day, e) >= EVENT_KEEP_UNTIL
+      )
+    else
+      new_events = this.state.events.slice()
 
     this.setState({
       day: mod(new_day, CALENDAR.length),
-      year: year,
+      year: new_year,
+      events: new_events,
     })
+
+  addEvent: (day, description) ->
+    console.log day, description
+
+    year = this.state.year
+    if day < this.state.day
+      year += 1
+
+    event = {
+      added_at: {
+        year: this.state.year,
+        day: this.state.day,
+      },
+      deadline_at: {
+        year: year,
+        day: day,
+      },
+      description: description,
+      key: Date.now(),
+    }
+    new_events = [...this.state.events, event]
+    new_events.sort((a, b) =>
+      days_till_event(this.state.year, this.state.day, a) -
+      days_till_event(this.state.year, this.state.day, b)
+    )
+    this.setState({events: new_events})
 
   render: ->
     if this.state.is_ready
@@ -313,7 +400,15 @@ class App extends React.Component
           year={this.state.year}
           events={this.state.events}
         />
-        <AddEventWidget day={this.state.day} />
+        <AddEventWidget
+          day={this.state.day}
+          onClick={(day, description) => this.addEvent(day, description)}
+        />
+        <EventsTableWidget
+          day={this.state.day}
+          year={this.state.year}
+          events={this.state.events}
+        />
         <span className='footer'>v{VERSION}</span>
       </div>
     else
