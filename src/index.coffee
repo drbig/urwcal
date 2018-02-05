@@ -122,6 +122,9 @@ class EventsTableWidget extends React.Component
         null
 
     <tr key="tr-e-#{event.key}" className={class_name}>
+      <td>
+        <button onClick={=> this.props.delEvent(event.key)}>X</button>
+      </td>
       <td>{days_till_s}</td>
       <td>{event.description}</td>
     </tr>
@@ -130,8 +133,9 @@ class EventsTableWidget extends React.Component
     <table id='e_table'>
       <thead>
         <tr>
-          <th>When</th>
-          <th>What</th>
+          <th></th>
+          <th className='et_th_when'>When</th>
+          <th className='et_th_what'>What</th>
         </tr>
       </thead>
       <tbody>
@@ -347,10 +351,10 @@ class App extends React.Component
     else if new_day < 0
       new_year -= 1
 
-    if new_day > 1 or new_year > this.state.year
+    if new_day > this.state.day or new_year > this.state.year
       new_events = (
         e for e in this.state.events \
-        when days_till_event(new_year, new_day, e) >= EVENT_KEEP_UNTIL
+        when days_till_event(this.state.year, this.state.day, e) > EVENT_KEEP_UNTIL
       )
     else
       new_events = this.state.events.slice()
@@ -362,8 +366,6 @@ class App extends React.Component
     })
 
   addEvent: (day, description) ->
-    console.log day, description
-
     year = this.state.year
     if day < this.state.day
       year += 1
@@ -387,6 +389,10 @@ class App extends React.Component
     )
     this.setState({events: new_events})
 
+  delEvent: (key) ->
+    new_events = (e for e in this.state.events when e.key != key)
+    this.setState({events: new_events})
+
   render: ->
     if this.state.is_ready
       <div>
@@ -404,11 +410,15 @@ class App extends React.Component
           day={this.state.day}
           onClick={(day, description) => this.addEvent(day, description)}
         />
-        <EventsTableWidget
-          day={this.state.day}
-          year={this.state.year}
-          events={this.state.events}
-        />
+        {
+          <EventsTableWidget
+            day={this.state.day}
+            year={this.state.year}
+            events={this.state.events}
+            delEvent={(key) => this.delEvent(key)}
+          /> \
+          if this.state.events.length > 0
+        }
         <span className='footer'>v{VERSION}</span>
       </div>
     else

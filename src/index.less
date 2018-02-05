@@ -46,31 +46,45 @@ th {
   border: 1px solid #333333;
 }
 td {
-  min-width: 64px;
   border: 1px solid #232323;
   padding: 4px;
 }
 
 .mw_td_base {
+  min-width: 64px;
   height: 48px;
 }
-td.mw_td_empty {
+.mw_td_empty {
   background-color: #060606;
 }
-td.mw_td_month {
+.mw_td_month {
   padding-left: 12px;
   padding-right: 12px;
 }
-td.mw_td_this_month {
+.mw_td_this_month {
   color: red;
 }
-td.mw_td_day {
+.mw_td_day {
   vertical-align: top;
 }
-td.mw_td_this_day {
+.mw_td_this_day {
   color: red;
 }
+.mw_td_events_cnt {
+  color: white;
+  vertical-align: bottom;
+  text-align: right;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
 
+.et_th_when {
+  min-width: 12ch;
+}
+.et_th_what {
+  min-width: 72ch;
+}
 .event_past {
   color: #808080;
 }
@@ -79,15 +93,6 @@ td.mw_td_this_day {
 }
 .event_tomorrow {
   color: yellow;
-}
-
-.mw_td_events_cnt {
-  color: white;
-  vertical-align: bottom;
-  text-align: right;
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
 }
 
 .winter {
