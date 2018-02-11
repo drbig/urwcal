@@ -1,6 +1,6 @@
 # urwcal
 
-UrwCal is a "Calendar App" for the game [UnReal World](http://www.urw.fi/wiki) (also available on [Steam](http://store.steampowered.com/app/351700/UnReal_World/).
+UrwCal is a "Calendar App" for the game [UnReal World](http://www.urw.fi/wiki) (also available on [Steam](http://store.steampowered.com/app/351700/UnReal_World/)).
 
 Current features (*2018-02-11*):
 
