@@ -12,7 +12,7 @@
     "url": "git+https://github.com/drbig/urwcal.git"
   },
   "author": "Piotr S. Staszewski",
-  "license": "MIT",
+  "license": "BSD",
   "bugs": {
     "url": "https://github.com/drbig/urwcal/issues"
   },
