@@ -1,4 +1,4 @@
-# urwcal
+# urwcal [![Build Status](https://travis-ci.org/drbig/urwcal.svg?branch=master)](https://travis-ci.org/drbig/urwcal)
 
 UrwCal is a "Calendar App" for the game [UnReal World](http://www.urw.fi/wiki) (also available on [Steam](http://store.steampowered.com/app/351700/UnReal_World/)).
 
