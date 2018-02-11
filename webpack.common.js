@@ -1,6 +1,12 @@
 const path = require('path');
+
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const GitRevisionPlugin = require('git-revision-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+const gitRevisionPlugin = new GitRevisionPlugin({
+  versionCommand: 'describe --tags'
+});
 
 module.exports = {
   entry: {
@@ -9,8 +15,9 @@ module.exports = {
   plugins: [
     new CleanWebpackPlugin(['dist']),
     new HtmlWebpackPlugin({
+      template: 'src/index.hbs',
       title: 'UrW Calendar App',
-      template: 'src/index.hbs'
+      version: gitRevisionPlugin.version()
     })
   ],
   module: {

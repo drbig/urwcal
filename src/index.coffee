@@ -318,7 +318,6 @@ class AtDateWidget extends React.Component
 class App extends React.Component
   EVENT_KEEP_UNTIL = -30
   LS_KEY = 'urw_cal_state'
-  VERSION = '0.0.2'
 
   constructor: (props) ->
     super props
@@ -419,7 +418,6 @@ class App extends React.Component
           /> \
           if this.state.events.length > 0
         }
-        <span className='footer'>v{VERSION}</span>
       </div>
     else
       <div>
@@ -429,7 +427,6 @@ class App extends React.Component
           submit_text='Go'
           onClick={(day) => this.initState(day)}
         />
-        <span className='footer'>v{VERSION}</span>
       </div>
 
 render <App />, document.getElementById('app')
