@@ -15,6 +15,7 @@ module.exports = {
   plugins: [
     new CleanWebpackPlugin(['dist']),
     new HtmlWebpackPlugin({
+      hash: true,
       template: 'src/index.hbs',
       title: 'UrW Calendar App',
       version: gitRevisionPlugin.version()
